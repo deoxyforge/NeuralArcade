@@ -5,6 +5,7 @@
 <meta charset="UTF-8"/>
 <title>Neural Snake</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="navigate.js"></script>
 <style>
 :root{--bg:#080810;--surface:#0e0e1a;--panel:#13131f;--border:#1e1e35;--cyan:#00f5ff;--green:#00ff88;--mag:#ff00aa;--text:#e0e0ff;--dim:#6060a0;}
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -40,7 +41,7 @@ canvas{border:1px solid var(--border);box-shadow:0 0 40px rgba(0,255,136,0.1);}
 </head>
 <body>
 <div class="topbar">
-  <button class="back-btn" onclick="window.location.href='index.html'">← Hub</button>
+  <button class="back-btn" onclick="goHome()">← Hub</button>
   <div class="topbar-title">🐍 NEURAL SNAKE</div>
 </div>
 <div class="main">
@@ -100,7 +101,7 @@ canvas{border:1px solid var(--border);box-shadow:0 0 40px rgba(0,255,136,0.1);}
   <div class="go-score" id="goScore">Score: 0</div>
   <div class="go-sub" id="goSub">Press R or click to restart</div>
   <button class="go-btn" onclick="restart()">Restart</button>
-  <button class="go-btn" onclick="window.location.href='index.html'">Game Hub</button>
+  <button class="go-btn" onclick="goHome()">Game Hub</button>
 </div>
 <script>
 const canvas=document.getElementById('c');

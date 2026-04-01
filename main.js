@@ -1,9 +1,11 @@
 // Electron desktop app entry point
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 
+let mainWindow;
+
 function createWindow() {
-  const win = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 1100,
@@ -18,8 +20,21 @@ function createWindow() {
     icon: path.join(__dirname, 'assets', 'icon.png'),
   });
 
-  win.loadFile('index.html');
+  mainWindow.loadFile('index.html');
 }
+
+// Handle navigation requests from renderer
+ipcMain.handle('navigate-to', async (event, filename) => {
+  console.log('[Main] Received navigate-to request:', filename);
+  if (mainWindow) {
+    console.log('[Main] Loading file:', filename);
+    await mainWindow.loadFile(filename);
+    return { success: true };
+  } else {
+    console.log('[Main] mainWindow not available');
+    return { success: false };
+  }
+});
 
 app.whenReady().then(() => {
   createWindow();
