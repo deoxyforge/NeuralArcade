@@ -7,6 +7,7 @@
 <title>Neural Arcade</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="navigate.js"></script>
 <style>
 :root {
   --bg: #080810;
@@ -292,7 +293,7 @@ document.getElementById('gamesPlayed').textContent = stats.played;
 document.getElementById('totalWins').textContent = stats.wins;
 
 function launchGame(game) {
-  window.location.href = game;
+  navigateTo(game);
 }
 </script>
 </body>

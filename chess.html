@@ -5,6 +5,7 @@
 <meta charset="UTF-8"/>
 <title>Neural Chess</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="navigate.js"></script>
 <style>
 :root{--bg:#080810;--surface:#0e0e1a;--panel:#13131f;--border:#1e1e35;--cyan:#00f5ff;--mag:#ff00aa;--green:#00ff88;--gold:#ffd700;--text:#e0e0ff;--dim:#6060a0;}
 *{margin:0;padding:0;box-sizing:border-box;}html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;overflow:hidden;}
@@ -88,7 +89,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 </head>
 <body>
 <div class="topbar">
-  <button class="back-btn" onclick="window.location.href='index.html'">← Hub</button>
+  <button class="back-btn" onclick="goHome()">← Hub</button>
   <div class="topbar-title">♟ NEURAL CHESS</div>
   <div class="topbar-status" id="topStatus">White to move</div>
 </div>
@@ -171,7 +172,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   <div class="go-title" id="goTitle">CHECKMATE</div>
   <div class="go-sub"   id="goSub">White wins!</div>
   <button class="go-btn" onclick="newGame()">Play Again</button>
-  <button class="go-btn" onclick="window.location.href='index.html'">Game Hub</button>
+  <button class="go-btn" onclick="goHome()">Game Hub</button>
 </div>
 
 <script>

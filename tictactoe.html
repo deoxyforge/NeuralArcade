@@ -5,6 +5,7 @@
 <meta charset="UTF-8"/>
 <title>Neural Tic-Tac-Toe</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="navigate.js"></script>
 <style>
 :root{--bg:#080810;--surface:#0e0e1a;--panel:#13131f;--border:#1e1e35;--cyan:#00f5ff;--mag:#ff00aa;--text:#e0e0ff;--dim:#6060a0;}
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -57,7 +58,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 </head>
 <body>
 <div class="topbar">
-  <button class="back-btn" onclick="window.location.href='index.html'">← Hub</button>
+  <button class="back-btn" onclick="goHome()">← Hub</button>
   <div class="topbar-title">⊞ NEURAL TIC-TAC-TOE</div>
 </div>
 <div class="main">
