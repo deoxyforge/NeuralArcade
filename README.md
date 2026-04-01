@@ -2,8 +2,6 @@
 
 A cyberpunk AI-powered game hub with **Chess**, **Snake**, **Tic-Tac-Toe**, and **Checkers** — all featuring intelligent AI opponents. Built with **Electron**, **HTML**, **CSS**, and **JavaScript**.
 
-Inspired by [Neural Chess](https://github.com/Jashanjindal/Neural_chess) by Jashanjindal.
-
 ---
 
 ## 🎮 Games
