@@ -24,15 +24,13 @@ function createWindow() {
 }
 
 // Handle navigation requests from renderer
-ipcMain.handle('navigate-to', async (event, filename) => {
+ipcMain.on('navigate-to', (event, filename) => {
   console.log('[Main] Received navigate-to request:', filename);
   if (mainWindow) {
     console.log('[Main] Loading file:', filename);
-    await mainWindow.loadFile(filename);
-    return { success: true };
+    mainWindow.loadFile(filename);
   } else {
     console.log('[Main] mainWindow not available');
-    return { success: false };
   }
 });
 

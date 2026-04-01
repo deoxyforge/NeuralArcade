@@ -5,6 +5,35 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Neural Arcade</title>
+<script>
+// Initialize navigation FIRST before anything else
+let ipc = null;
+try {
+  ipc = require('electron').ipcRenderer;
+  console.log('[Navigation] IPC loaded successfully');
+} catch(e) {
+  console.log('[Navigation] Running in non-Electron environment');
+}
+
+window.launchGame = function(game) {
+  console.log('[Navigation] launchGame() called with:', game, 'IPC available:', !!ipc);
+  if (ipc) {
+    console.log('[Navigation] Sending navigate-to message');
+    ipc.send('navigate-to', game);
+  } else {
+    console.log('[Navigation] Using fallback window.location');
+    window.location.href = game;
+  }
+};
+
+// ESC key to reload home (or close if on home)
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    console.log('[Navigation] ESC key pressed on home screen');
+    window.location.reload();
+  }
+});
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
 <script src="navigate.js"></script>
@@ -213,7 +242,7 @@ body::after {
 
   <div class="game-grid">
     <!-- Chess -->
-    <div class="game-card chess" onclick="launchGame('chess.html')">
+    <div class="game-card chess" onclick="window.launchGame('chess.html')">
       <div class="card-bg"></div>
       <div class="card-corner"></div>
       <div class="card-corner-br"></div>
@@ -231,7 +260,7 @@ body::after {
     </div>
 
     <!-- Snake -->
-    <div class="game-card snake" onclick="launchGame('snake.html')">
+    <div class="game-card snake" onclick="window.launchGame('snake.html')">
       <div class="card-bg"></div>
       <div class="card-corner"></div>
       <div class="card-corner-br"></div>
@@ -249,7 +278,7 @@ body::after {
     </div>
 
     <!-- Tic Tac Toe -->
-    <div class="game-card tictactoe" onclick="launchGame('tictactoe.html')">
+    <div class="game-card tictactoe" onclick="window.launchGame('tictactoe.html')">
       <div class="card-bg"></div>
       <div class="card-corner"></div>
       <div class="card-corner-br"></div>
@@ -267,7 +296,7 @@ body::after {
     </div>
 
     <!-- Checkers -->
-    <div class="game-card checkers" onclick="launchGame('checkers.html')">
+    <div class="game-card checkers" onclick="window.launchGame('checkers.html')">
       <div class="card-bg"></div>
       <div class="card-corner"></div>
       <div class="card-corner-br"></div>
