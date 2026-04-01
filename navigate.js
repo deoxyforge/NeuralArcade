@@ -1,50 +1,36 @@
-// Electron-aware navigation helper
-let ipcRenderer = null;
-const isElectron = () => {
-  return (typeof window !== 'undefined' && 
-          typeof window.process === 'object' && 
-          window.process.type === 'renderer');
-};
-
-console.log('navigate.js: Loading... isElectron:', isElectron());
-
-// Try to get ipcRenderer when script loads
+// Simple electron navigation for Neural Arcade
 try {
-  if (isElectron() && typeof require === 'function') {
-    const electron = require('electron');
-    ipcRenderer = electron.ipcRenderer;
-    console.log('navigate.js: Successfully loaded ipcRenderer');
-  } else {
-    console.log('navigate.js: Not in Electron or require unavailable');
-  }
-} catch (e) {
-  console.log('navigate.js: Error loading Electron:', e.message);
-}
-
-async function navigateTo(filename) {
-  console.log('[navigate] Called with:', filename);
-  console.log('[navigate] isElectron:', isElectron());
-  console.log('[navigate] ipcRenderer available:', !!ipcRenderer);
-  
-  if (ipcRenderer) {
-    // Use IPC for Electron
+  const { ipcRenderer } = require('electron');
+  window.goHome = function() {
+    console.log('goHome called');
     try {
-      console.log('[navigate] Sending navigate-to via IPC');
-      const result = await ipcRenderer.invoke('navigate-to', filename);
-      console.log('[navigate] IPC result:', result);
-    } catch (e) {
-      console.log('[navigate] IPC failed:', e.message);
-      // Fallback
-      window.location.href = filename;
+      ipcRenderer.send('navigate-to', 'index.html');
+      console.log('navigate-to sent for index.html');
+    } catch(e) {
+      console.error('IPC send failed:', e);
+      window.location.href = 'index.html';
     }
-  } else {
-    // Fallback for web or if IPC failed
-    console.log('[navigate] Using window.location.href fallback');
-    window.location.href = filename;
-  }
-}
-
-function goHome() {
-  console.log('[goHome] Called');
-  navigateTo('index.html');
+  };
+  window.navigateTo = function(file) {
+    console.log('navigateTo called with:', file);
+    try {
+      ipcRenderer.send('navigate-to', file);
+      console.log('navigate-to sent for:', file);
+    } catch(e) {
+      console.error('IPC send failed:', e);
+      window.location.href = file;
+    }
+  };
+  console.log('Navigation functions initialized with Electron IPC');
+} catch(e) {
+  console.log('Electron not available, using fallback');
+  // Fallback for web version
+  window.goHome = function() { 
+    console.log('Using fallback goHome');
+    window.location.href = 'index.html'; 
+  };
+  window.navigateTo = function(file) { 
+    console.log('Using fallback navigateTo');
+    window.location.href = file; 
+  };
 }
