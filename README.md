@@ -136,6 +136,5 @@ MIT License — free to use and modify.
 
 ## 🙏 Credits
 
-- Inspired by [Neural Chess](https://github.com/Jashanjindal/Neural_chess) by [@Jashanjindal](https://github.com/Jashanjindal)
 - Chess piece unicode symbols
 - [Orbitron](https://fonts.google.com/specimen/Orbitron) & [Rajdhani](https://fonts.google.com/specimen/Rajdhani) fonts via Google Fonts
