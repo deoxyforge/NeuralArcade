@@ -187,7 +187,7 @@ const PST={
   K:[-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-20,-30,-30,-40,-40,-30,-30,-20,-10,-20,-20,-20,-20,-20,-20,-10,20,20,0,0,0,0,20,20,20,30,10,0,0,10,30,20]
 };
 
-let board,turn,selected,legalMoves,moveHistory,flipped,difficulty,gameOver,whiteCap,blackCap,lastFrom,lastTo,moveNum;
+let board,turn,selected,legalMoves,moveHistory,flipped,difficulty='medium',gameOver,whiteCap,blackCap,lastFrom,lastTo,moveNum;
 
 const I=(r,c)=>r*8+c, R=i=>Math.floor(i/8), C=i=>i%8, CLR=p=>p?p[0]:null, TYP=p=>p?p[1]:null;
 
@@ -272,7 +272,6 @@ function applyToBoard(b,m){
   else{b[m.to]=b[m.from];b[m.from]=null;if(t==='P'&&(R(m.to)===0||R(m.to)===7))b[m.to]=s+'Q';}
 }
 
-let difficulty='medium';
 function setDiff(d){difficulty=d;['easy','medium','hard'].forEach(x=>document.getElementById('btn-'+x).classList.remove('active'));document.getElementById('btn-'+d).classList.add('active');}
 function getDepth(){return{easy:1,medium:3,hard:4}[difficulty];}
 
