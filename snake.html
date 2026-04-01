@@ -1,1 +1,271 @@
 <!-- Snake with human mode + AI demo (BFS pathfinding) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Neural Snake</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080810;--surface:#0e0e1a;--panel:#13131f;--border:#1e1e35;--cyan:#00f5ff;--green:#00ff88;--mag:#ff00aa;--text:#e0e0ff;--dim:#6060a0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);}
+.topbar{height:44px;background:rgba(8,8,16,0.97);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;}
+.back-btn{font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:2px;color:var(--green);border:1px solid var(--green);padding:5px 14px;cursor:pointer;background:transparent;text-transform:uppercase;transition:all 0.2s;}
+.back-btn:hover{background:var(--green);color:var(--bg);}
+.topbar-title{font-family:'Orbitron',sans-serif;font-size:13px;letter-spacing:4px;color:var(--green);}
+.main{flex:1;display:flex;overflow:hidden;}
+.side-panel{width:200px;background:var(--panel);border-right:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:16px;flex-shrink:0;}
+.right-side{width:200px;background:var(--panel);border-left:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:16px;flex-shrink:0;}
+.panel-title{font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin-bottom:8px;}
+.stat-big{font-family:'Orbitron',sans-serif;font-size:28px;color:var(--green);}
+.stat-label{font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;}
+.mode-btn{width:100%;padding:10px;background:transparent;border:1px solid var(--border);color:var(--dim);font-family:'Rajdhani',sans-serif;font-size:12px;letter-spacing:2px;cursor:pointer;text-transform:uppercase;transition:all 0.2s;margin-bottom:6px;}
+.mode-btn:hover,.mode-btn.active{border-color:var(--green);color:var(--green);background:rgba(0,255,136,0.05);}
+.speed-btn{width:100%;padding:8px;background:transparent;border:1px solid var(--border);color:var(--dim);font-family:'Rajdhani',sans-serif;font-size:11px;letter-spacing:2px;cursor:pointer;text-transform:uppercase;transition:all 0.2s;margin-bottom:4px;}
+.speed-btn:hover,.speed-btn.active{border-color:var(--cyan);color:var(--cyan);}
+.section{border-top:1px solid var(--border);padding-top:16px;}
+.key-hint{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--dim);margin:4px 0;}
+.key{border:1px solid var(--border);padding:2px 7px;font-size:10px;color:var(--text);font-family:'Orbitron',sans-serif;border-radius:2px;}
+.board-area{flex:1;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+canvas{border:1px solid var(--border);box-shadow:0 0 40px rgba(0,255,136,0.1);}
+.game-over-overlay{display:none;position:fixed;inset:0;background:rgba(8,8,16,0.92);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:20px;}
+.game-over-overlay.show{display:flex;}
+.go-title{font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;letter-spacing:8px;color:var(--green);text-shadow:0 0 40px rgba(0,255,136,0.7);}
+.go-sub{font-size:15px;letter-spacing:4px;color:var(--dim);}
+.go-score{font-family:'Orbitron',sans-serif;font-size:22px;color:var(--cyan);}
+.go-btn{font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:3px;padding:12px 28px;border:1px solid var(--green);color:var(--green);background:transparent;cursor:pointer;text-transform:uppercase;transition:all 0.2s;}
+.go-btn:hover{background:var(--green);color:var(--bg);}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="back-btn" onclick="window.location.href='index.html'">← Hub</button>
+  <div class="topbar-title">🐍 NEURAL SNAKE</div>
+</div>
+<div class="main">
+  <div class="side-panel">
+    <div>
+      <div class="panel-title">Score</div>
+      <div class="stat-big" id="scoreDisp">0</div>
+      <div class="stat-label">Current</div>
+    </div>
+    <div class="section">
+      <div class="panel-title">High Score</div>
+      <div class="stat-big" id="hiScore">0</div>
+      <div class="stat-label">Best</div>
+    </div>
+    <div class="section">
+      <div class="panel-title">Mode</div>
+      <button class="mode-btn active" id="btn-human" onclick="setMode('human')">Human</button>
+      <button class="mode-btn" id="btn-ai" onclick="setMode('ai')">AI Demo</button>
+    </div>
+    <div class="section">
+      <div class="panel-title">Speed</div>
+      <button class="speed-btn" id="sp-slow" onclick="setSpeed(200)">Slow</button>
+      <button class="speed-btn active" id="sp-med" onclick="setSpeed(120)">Normal</button>
+      <button class="speed-btn" id="sp-fast" onclick="setSpeed(60)">Fast</button>
+    </div>
+  </div>
+  <div class="board-area">
+    <canvas id="c" width="560" height="560"></canvas>
+  </div>
+  <div class="right-side">
+    <div>
+      <div class="panel-title">Controls</div>
+      <div class="key-hint"><div class="key">W</div> Up</div>
+      <div class="key-hint"><div class="key">A</div> Left</div>
+      <div class="key-hint"><div class="key">S</div> Down</div>
+      <div class="key-hint"><div class="key">D</div> Right</div>
+      <div class="key-hint"><div class="key">↑↓←→</div> Arrow Keys</div>
+    </div>
+    <div class="section">
+      <div class="panel-title">Controls</div>
+      <div class="key-hint"><div class="key">P</div> Pause</div>
+      <div class="key-hint"><div class="key">R</div> Restart</div>
+    </div>
+    <div class="section">
+      <div class="panel-title">AI Info</div>
+      <div style="font-size:11px;color:var(--dim);line-height:1.7;">Greedy pathfinding: AI finds the shortest path to food using BFS, with flood-fill safety checks to avoid trapping itself.</div>
+    </div>
+    <div class="section">
+      <div class="panel-title">Length</div>
+      <div class="stat-big" id="lenDisp">3</div>
+      <div class="stat-label">Snake Length</div>
+    </div>
+  </div>
+</div>
+<div class="game-over-overlay" id="gameOverOverlay">
+  <div class="go-title">GAME OVER</div>
+  <div class="go-score" id="goScore">Score: 0</div>
+  <div class="go-sub" id="goSub">Press R or click to restart</div>
+  <button class="go-btn" onclick="restart()">Restart</button>
+  <button class="go-btn" onclick="window.location.href='index.html'">Game Hub</button>
+</div>
+<script>
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+const GRID=28, CELL=20;
+let snake,dir,food,score,hiScore,interval,paused,mode,gameRunning,speed;
+hiScore=parseInt(localStorage.getItem('snakeHi')||'0');
+document.getElementById('hiScore').textContent=hiScore;
+
+function setMode(m){
+  mode=m;
+  document.getElementById('btn-human').classList.toggle('active',m==='human');
+  document.getElementById('btn-ai').classList.toggle('active',m==='ai');
+  restart();
+}
+function setSpeed(s){
+  speed=s;
+  ['slow','med','fast'].forEach(x=>document.getElementById('sp-'+x).classList.remove('active'));
+  const map={200:'slow',120:'med',60:'fast'};
+  document.getElementById('sp-'+map[s]).classList.add('active');
+  if(gameRunning&&!paused){clearInterval(interval);interval=setInterval(tick,speed);}
+}
+mode='human';speed=120;
+
+function restart(){
+  clearInterval(interval);
+  snake=[{x:14,y:14},{x:13,y:14},{x:12,y:14}];
+  dir={x:1,y:0};score=0;paused=false;gameRunning=true;
+  document.getElementById('gameOverOverlay').classList.remove('show');
+  placeFood();draw();
+  interval=setInterval(tick,speed);
+}
+
+function placeFood(){
+  do{food={x:Math.floor(Math.random()*GRID),y:Math.floor(Math.random()*GRID)};}
+  while(snake.some(s=>s.x===food.x&&s.y===food.y));
+}
+
+function tick(){
+  if(paused||!gameRunning) return;
+  if(mode==='ai') aiStep();
+  const head={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+  if(head.x<0||head.x>=GRID||head.y<0||head.y>=GRID||snake.some(s=>s.x===head.x&&s.y===head.y)){
+    gameOver();return;
+  }
+  snake.unshift(head);
+  if(head.x===food.x&&head.y===food.y){
+    score++;
+    document.getElementById('scoreDisp').textContent=score;
+    document.getElementById('lenDisp').textContent=snake.length;
+    if(score>hiScore){hiScore=score;localStorage.setItem('snakeHi',hiScore);document.getElementById('hiScore').textContent=hiScore;}
+    placeFood();
+  } else {
+    snake.pop();
+  }
+  draw();
+}
+
+// BFS pathfinding for AI
+function bfs(start,target,snakeBody){
+  const visited=new Set();
+  const queue=[[start,[]]];
+  while(queue.length){
+    const [pos,path]=queue.shift();
+    const key=pos.x+','+pos.y;
+    if(visited.has(key)) continue;
+    visited.add(key);
+    if(pos.x===target.x&&pos.y===target.y) return path;
+    for(const d of [{x:0,y:-1},{x:0,y:1},{x:-1,y:0},{x:1,y:0}]){
+      const nx={x:pos.x+d.x,y:pos.y+d.y};
+      const nkey=nx.x+','+nx.y;
+      if(nx.x<0||nx.x>=GRID||nx.y<0||nx.y>=GRID) continue;
+      if(snakeBody.some(s=>s.x===nx.x&&s.y===nx.y)) continue;
+      if(!visited.has(nkey)) queue.push([nx,[...path,d]]);
+    }
+  }
+  return null;
+}
+function floodFill(start,snakeBody){
+  const visited=new Set();const queue=[start];
+  while(queue.length){
+    const pos=queue.shift();const key=pos.x+','+pos.y;
+    if(visited.has(key)) continue;
+    visited.add(key);
+    for(const d of [{x:0,y:-1},{x:0,y:1},{x:-1,y:0},{x:1,y:0}]){
+      const nx={x:pos.x+d.x,y:pos.y+d.y};
+      if(nx.x<0||nx.x>=GRID||nx.y<0||nx.y>=GRID) continue;
+      if(snakeBody.some(s=>s.x===nx.x&&s.y===nx.y)) continue;
+      if(!visited.has(nx.x+','+nx.y)) queue.push(nx);
+    }
+  }
+  return visited.size;
+}
+
+function aiStep(){
+  const head=snake[0];
+  const path=bfs(head,food,snake.slice(0,-1));
+  if(path&&path.length>0){
+    const d=path[0];
+    // Safety check: simulate move and flood fill
+    const newHead={x:head.x+d.x,y:head.y+d.y};
+    const simSnake=[newHead,...snake.slice(0,-1)];
+    const space=floodFill(newHead,simSnake.slice(1));
+    if(space>snake.length/2){
+      dir=d;return;
+    }
+  }
+  // Fallback: pick safest direction
+  const options=[{x:0,y:-1},{x:0,y:1},{x:-1,y:0},{x:1,y:0}]
+    .filter(d=>!(d.x===-dir.x&&d.y===-dir.y))
+    .filter(d=>{
+      const n={x:head.x+d.x,y:head.y+d.y};
+      return n.x>=0&&n.x<GRID&&n.y>=0&&n.y<GRID&&!snake.some(s=>s.x===n.x&&s.y===n.y);
+    })
+    .sort((a,b)=>{
+      const na={x:head.x+a.x,y:head.y+a.y},nb={x:head.x+b.x,y:head.y+b.y};
+      return floodFill(nb,snake.slice(0,-1))-floodFill(na,snake.slice(0,-1));
+    });
+  if(options.length) dir=options[0];
+}
+
+function draw(){
+  ctx.fillStyle='#080810';ctx.fillRect(0,0,canvas.width,canvas.height);
+  // Grid
+  ctx.strokeStyle='rgba(30,30,53,0.5)';ctx.lineWidth=0.5;
+  for(let i=0;i<=GRID;i++){
+    ctx.beginPath();ctx.moveTo(i*CELL,0);ctx.lineTo(i*CELL,canvas.height);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,i*CELL);ctx.lineTo(canvas.width,i*CELL);ctx.stroke();
+  }
+  // Snake
+  snake.forEach((s,i)=>{
+    const t=1-i/snake.length;
+    ctx.fillStyle=`rgba(0,${Math.floor(200+55*t)},${Math.floor(100+88*t)},${0.7+0.3*t})`;
+    ctx.shadowColor='#00ff88';ctx.shadowBlur=i===0?16:4;
+    ctx.fillRect(s.x*CELL+1,s.y*CELL+1,CELL-2,CELL-2);
+  });
+  ctx.shadowBlur=0;
+  // Food
+  ctx.fillStyle='#ff00aa';ctx.shadowColor='#ff00aa';ctx.shadowBlur=20;
+  ctx.beginPath();ctx.arc(food.x*CELL+CELL/2,food.y*CELL+CELL/2,CELL/2-2,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+  // AI label
+  if(mode==='ai'){
+    ctx.fillStyle='rgba(0,245,255,0.6)';ctx.font='10px Orbitron';
+    ctx.fillText('AI MODE',8,16);
+  }
+}
+
+function gameOver(){
+  gameRunning=false;clearInterval(interval);
+  document.getElementById('gameOverOverlay').classList.add('show');
+  document.getElementById('goScore').textContent='Score: '+score+' | Length: '+snake.length;
+  const s=JSON.parse(localStorage.getItem('neuralArcadeStats')||'{"played":0,"wins":0}');
+  s.played++;localStorage.setItem('neuralArcadeStats',JSON.stringify(s));
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='r'||e.key==='R'){restart();return;}
+  if(e.key==='p'||e.key==='P'){paused=!paused;return;}
+  const map={'ArrowUp':{x:0,y:-1},'ArrowDown':{x:0,y:1},'ArrowLeft':{x:-1,y:0},'ArrowRight':{x:1,y:0},'w':{x:0,y:-1},'s':{x:0,y:1},'a':{x:-1,y:0},'d':{x:1,y:0},'W':{x:0,y:-1},'S':{x:0,y:1},'A':{x:-1,y:0},'D':{x:1,y:0}};
+  const d=map[e.key];
+  if(d&&mode==='human'&&!(d.x===-dir.x&&d.y===-dir.y)){dir=d;e.preventDefault();}
+});
+
+restart();
+</script>
+</body>
+</html>

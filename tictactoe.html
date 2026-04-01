@@ -1,1 +1,246 @@
-Perfect unbeatable AI, match history, stats<!--  -->
+<!-- Perfect unbeatable AI, match history, stats, and more! Play Tic Tac Toe against an unbeatable opponent and track your progress with detailed match history and stats. Challenge yourself and improve your skills with every game!    -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Neural Tic-Tac-Toe</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080810;--surface:#0e0e1a;--panel:#13131f;--border:#1e1e35;--cyan:#00f5ff;--mag:#ff00aa;--text:#e0e0ff;--dim:#6060a0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);}
+.topbar{height:44px;background:rgba(8,8,16,0.97);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;}
+.back-btn{font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:2px;color:var(--mag);border:1px solid var(--mag);padding:5px 14px;cursor:pointer;background:transparent;text-transform:uppercase;transition:all 0.2s;}
+.back-btn:hover{background:var(--mag);color:var(--bg);}
+.topbar-title{font-family:'Orbitron',sans-serif;font-size:13px;letter-spacing:4px;color:var(--mag);}
+.main{flex:1;display:flex;align-items:center;justify-content:center;gap:60px;overflow:hidden;}
+
+/* Stats sidebar */
+.stats-col{display:flex;flex-direction:column;gap:24px;width:180px;}
+.stat-box{border:1px solid var(--border);padding:16px;background:var(--surface);}
+.stat-box-title{font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin-bottom:8px;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;margin:4px 0;}
+.stat-name{font-size:12px;color:var(--dim);letter-spacing:1px;}
+.stat-num{font-family:'Orbitron',sans-serif;font-size:16px;}
+.stat-num.wins{color:#00ff88;}
+.stat-num.losses{color:var(--mag);}
+.stat-num.draws{color:var(--cyan);}
+.marker-pick{display:flex;gap:10px;margin-top:8px;}
+.mk-btn{flex:1;padding:10px;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:'Orbitron',sans-serif;font-size:20px;cursor:pointer;transition:all 0.2s;}
+.mk-btn:hover,.mk-btn.active{border-color:var(--mag);color:var(--mag);background:rgba(255,0,170,0.08);}
+
+/* Board */
+.board-col{display:flex;flex-direction:column;align-items:center;gap:20px;}
+.status-msg{font-family:'Orbitron',sans-serif;font-size:14px;letter-spacing:4px;color:var(--cyan);height:24px;text-align:center;}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--border);box-shadow:0 0 40px rgba(255,0,170,0.1);}
+.cell{width:140px;height:140px;display:flex;align-items:center;justify-content:center;font-size:72px;cursor:pointer;border:1px solid var(--border);background:var(--surface);transition:background 0.2s;position:relative;overflow:hidden;font-family:'Orbitron',sans-serif;font-weight:700;}
+.cell:hover:not(.taken){background:rgba(255,0,170,0.05);}
+.cell.X{color:var(--mag);text-shadow:0 0 20px rgba(255,0,170,0.8);animation:popIn 0.2s ease;}
+.cell.O{color:var(--cyan);text-shadow:0 0 20px rgba(0,245,255,0.8);animation:popIn 0.2s ease;}
+.cell.win-cell{background:rgba(255,215,0,0.08)!important;border-color:#ffd700!important;}
+@keyframes popIn{from{transform:scale(0.5);opacity:0;}to{transform:scale(1);opacity:1;}}
+
+.board-btns{display:flex;gap:12px;}
+.b-btn{padding:10px 24px;border:1px solid var(--border);color:var(--dim);background:transparent;font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:2px;cursor:pointer;text-transform:uppercase;transition:all 0.2s;}
+.b-btn:hover{border-color:var(--mag);color:var(--mag);}
+
+/* History */
+.hist-col{width:180px;display:flex;flex-direction:column;gap:16px;}
+.hist-title{font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;}
+.hist-list{display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto;}
+.hist-item{font-size:11px;padding:6px 10px;border:1px solid var(--border);color:var(--dim);letter-spacing:1px;}
+.hist-item.W{border-color:rgba(0,255,136,0.4);color:#00ff88;}
+.hist-item.L{border-color:rgba(255,0,170,0.4);color:var(--mag);}
+.hist-item.D{border-color:rgba(0,245,255,0.3);color:var(--cyan);}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="back-btn" onclick="window.location.href='index.html'">← Hub</button>
+  <div class="topbar-title">⊞ NEURAL TIC-TAC-TOE</div>
+</div>
+<div class="main">
+  <!-- Stats -->
+  <div class="stats-col">
+    <div class="stat-box">
+      <div class="stat-box-title">Match Record</div>
+      <div class="stat-row"><span class="stat-name">Wins</span><span class="stat-num wins" id="wins">0</span></div>
+      <div class="stat-row"><span class="stat-name">Losses</span><span class="stat-num losses" id="losses">0</span></div>
+      <div class="stat-row"><span class="stat-name">Draws</span><span class="stat-num draws" id="draws">0</span></div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-box-title">Play As</div>
+      <div class="marker-pick">
+        <button class="mk-btn active" id="mk-X" onclick="setMarker('X')">✕</button>
+        <button class="mk-btn" id="mk-O" onclick="setMarker('O')">○</button>
+      </div>
+      <div style="font-size:11px;color:var(--dim);margin-top:10px;line-height:1.6;">X goes first. AI uses perfect minimax — best you can do is draw!</div>
+    </div>
+  </div>
+
+  <!-- Board -->
+  <div class="board-col">
+    <div class="status-msg" id="statusMsg">YOUR TURN</div>
+    <div class="board" id="board">
+      <div class="cell" onclick="click(0)" id="c0"></div>
+      <div class="cell" onclick="click(1)" id="c1"></div>
+      <div class="cell" onclick="click(2)" id="c2"></div>
+      <div class="cell" onclick="click(3)" id="c3"></div>
+      <div class="cell" onclick="click(4)" id="c4"></div>
+      <div class="cell" onclick="click(5)" id="c5"></div>
+      <div class="cell" onclick="click(6)" id="c6"></div>
+      <div class="cell" onclick="click(7)" id="c7"></div>
+      <div class="cell" onclick="click(8)" id="c8"></div>
+    </div>
+    <div class="board-btns">
+      <button class="b-btn" onclick="newGame()">New Game</button>
+      <button class="b-btn" onclick="resetStats()">Reset Stats</button>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="hist-col">
+    <div class="hist-title">Match History</div>
+    <div class="hist-list" id="histList"></div>
+  </div>
+</div>
+
+<script>
+let board,playerMark,aiMark,turn,gameOver,wins,losses,draws,matchNum;
+wins=parseInt(localStorage.getItem('ttt_wins')||0);
+losses=parseInt(localStorage.getItem('ttt_losses')||0);
+draws=parseInt(localStorage.getItem('ttt_draws')||0);
+matchNum=1;
+updateStats();
+
+function setMarker(m){
+  playerMark=m;aiMark=m==='X'?'O':'X';
+  document.getElementById('mk-X').classList.toggle('active',m==='X');
+  document.getElementById('mk-O').classList.toggle('active',m==='O');
+  newGame();
+}
+playerMark='X';aiMark='O';
+
+function newGame(){
+  board=Array(9).fill(null);gameOver=false;
+  for(let i=0;i<9;i++){
+    const c=document.getElementById('c'+i);
+    c.textContent='';c.className='cell';
+  }
+  turn='X';
+  if(playerMark==='O'){
+    document.getElementById('statusMsg').textContent='AI THINKING...';
+    setTimeout(()=>{aiMove();render();},400);
+  } else {
+    document.getElementById('statusMsg').textContent='YOUR TURN';
+  }
+}
+
+const WINS=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+function checkWin(b,m){
+  return WINS.find(w=>w.every(i=>b[i]===m))||null;
+}
+
+function minimax(b,isMax){
+  const pw=checkWin(b,playerMark),aw=checkWin(b,aiMark);
+  if(aw) return 10;
+  if(pw) return -10;
+  if(b.every(c=>c)) return 0;
+  if(isMax){
+    let best=-Infinity;
+    for(let i=0;i<9;i++){
+      if(!b[i]){b[i]=aiMark;best=Math.max(best,minimax(b,false));b[i]=null;}
+    }
+    return best;
+  } else {
+    let best=Infinity;
+    for(let i=0;i<9;i++){
+      if(!b[i]){b[i]=playerMark;best=Math.min(best,minimax(b,true));b[i]=null;}
+    }
+    return best;
+  }
+}
+
+function aiMove(){
+  let best=-Infinity,move=0;
+  for(let i=0;i<9;i++){
+    if(!board[i]){board[i]=aiMark;const v=minimax(board,false);board[i]=null;if(v>best){best=v;move=i;}}
+  }
+  board[move]=aiMark;turn=playerMark;
+}
+
+function click(i){
+  if(gameOver||board[i]||turn!==playerMark) return;
+  board[i]=playerMark;turn=aiMark;
+  render();
+  if(gameOver) return;
+  document.getElementById('statusMsg').textContent='AI THINKING...';
+  setTimeout(()=>{
+    aiMove();
+    render();
+  },300);
+}
+
+function render(){
+  for(let i=0;i<9;i++){
+    const c=document.getElementById('c'+i);
+    if(board[i]){
+      c.textContent=board[i]==='X'?'✕':'○';
+      c.className='cell '+board[i]+' taken';
+    }
+  }
+  const pw=checkWin(board,playerMark),aw=checkWin(board,aiMark);
+  if(aw){
+    aw.forEach(i=>document.getElementById('c'+i).classList.add('win-cell'));
+    document.getElementById('statusMsg').textContent='AI WINS!';
+    losses++;localStorage.setItem('ttt_losses',losses);
+    addHistory('L');gameOver=true;updateStats();return;
+  }
+  if(pw){
+    pw.forEach(i=>document.getElementById('c'+i).classList.add('win-cell'));
+    document.getElementById('statusMsg').textContent='YOU WIN! 🎉';
+    wins++;localStorage.setItem('ttt_wins',wins);
+    addHistory('W');gameOver=true;updateStats();
+    const s=JSON.parse(localStorage.getItem('neuralArcadeStats')||'{"played":0,"wins":0}');
+    s.wins++;localStorage.setItem('neuralArcadeStats',JSON.stringify(s));
+    return;
+  }
+  if(board.every(c=>c)){
+    document.getElementById('statusMsg').textContent="DRAW — WELL PLAYED";
+    draws++;localStorage.setItem('ttt_draws',draws);
+    addHistory('D');gameOver=true;updateStats();return;
+  }
+  document.getElementById('statusMsg').textContent=turn===playerMark?'YOUR TURN':'AI THINKING...';
+  const s=JSON.parse(localStorage.getItem('neuralArcadeStats')||'{"played":0,"wins":0}');
+  s.played++;localStorage.setItem('neuralArcadeStats',JSON.stringify(s));
+}
+
+function addHistory(result){
+  const hl=document.getElementById('histList');
+  const item=document.createElement('div');
+  item.className='hist-item '+result;
+  const labels={W:'WIN',L:'LOSS',D:'DRAW'};
+  item.textContent='#'+matchNum+' — '+labels[result];
+  matchNum++;
+  hl.insertBefore(item,hl.firstChild);
+}
+
+function updateStats(){
+  document.getElementById('wins').textContent=wins;
+  document.getElementById('losses').textContent=losses;
+  document.getElementById('draws').textContent=draws;
+}
+
+function resetStats(){
+  wins=0;losses=0;draws=0;matchNum=1;
+  localStorage.removeItem('ttt_wins');localStorage.removeItem('ttt_losses');localStorage.removeItem('ttt_draws');
+  document.getElementById('histList').innerHTML='';
+  updateStats();newGame();
+}
+
+newGame();
+</script>
+</body>
+</html>
