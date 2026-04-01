@@ -112,6 +112,13 @@ NeuralArcade/
 ## 📸 Screenshot
 
 > The hub features a dark cyberpunk aesthetic with glowing accents, scanline overlays, and animated card reveals.
+<img width="1606" height="1035" alt="image" src="https://github.com/user-attachments/assets/78c4ba33-357b-4fca-a498-02b2710c8d9c" />
+<img width="1601" height="1020" alt="image" src="https://github.com/user-attachments/assets/f2856b71-5e4b-4ab6-9b6f-07b655091a89" />
+<img width="1606" height="1023" alt="image" src="https://github.com/user-attachments/assets/c8a514c3-5544-4b14-be29-1386adde400c" />
+<img width="1606" height="1028" alt="image" src="https://github.com/user-attachments/assets/3302efaa-3020-475b-a4af-b67d8dd92e7f" />
+<img width="1607" height="1024" alt="image" src="https://github.com/user-attachments/assets/5e668de8-2070-4d4c-b646-4c5e2447b4d9" />
+
+
 
 ---
 
