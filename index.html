@@ -1,1 +1,298 @@
 <!-- Cyberpunk game hub launcher (home screen) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Neural Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080810;
+  --surface: #0e0e1a;
+  --panel: #13131f;
+  --border: #1e1e35;
+  --accent-cyan: #00f5ff;
+  --accent-magenta: #ff00aa;
+  --accent-gold: #ffd700;
+  --accent-green: #00ff88;
+  --text: #e0e0ff;
+  --text-dim: #6060a0;
+  --glow-cyan: 0 0 20px rgba(0,245,255,0.5);
+  --glow-mag: 0 0 20px rgba(255,0,170,0.5);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; background:var(--bg); color:var(--text); font-family:'Rajdhani',sans-serif; overflow:hidden; }
+
+/* scanline overlay */
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:9999;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+}
+
+/* corner chrome */
+body::after {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:9998;
+  background:
+    linear-gradient(135deg, rgba(0,245,255,0.08) 0%, transparent 30%),
+    linear-gradient(315deg, rgba(255,0,170,0.06) 0%, transparent 30%);
+}
+
+.titlebar {
+  position:fixed; top:0; left:0; right:0; height:40px;
+  background: rgba(8,8,16,0.95);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 20px;
+  -webkit-app-region: drag;
+  z-index:1000;
+}
+.titlebar-title {
+  font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:4px;
+  color:var(--accent-cyan); text-transform:uppercase;
+}
+.titlebar-controls { display:flex; gap:8px; -webkit-app-region:no-drag; }
+.ctrl-btn {
+  width:12px; height:12px; border-radius:50%; border:none; cursor:pointer;
+  transition:filter 0.2s;
+}
+.ctrl-btn:hover { filter:brightness(1.4); }
+.ctrl-close { background:#ff5f56; }
+.ctrl-min { background:#ffbd2e; }
+.ctrl-max { background:#27c93f; }
+
+.app { padding-top:40px; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+
+/* HEADER */
+.header {
+  padding:32px 48px 24px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  position:relative;
+}
+.header::after {
+  content:''; position:absolute; bottom:-1px; left:48px; width:200px; height:2px;
+  background:linear-gradient(90deg, var(--accent-cyan), transparent);
+}
+.logo { display:flex; flex-direction:column; }
+.logo-main {
+  font-family:'Orbitron',sans-serif; font-size:32px; font-weight:900; letter-spacing:6px;
+  background:linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 20px rgba(0,245,255,0.4));
+}
+.logo-sub {
+  font-size:11px; letter-spacing:8px; color:var(--text-dim); text-transform:uppercase; margin-top:2px;
+}
+.header-stats { display:flex; gap:32px; }
+.stat { text-align:center; }
+.stat-val { font-family:'Orbitron',sans-serif; font-size:20px; color:var(--accent-cyan); }
+.stat-label { font-size:10px; letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; }
+
+/* GRID */
+.game-grid {
+  flex:1; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr;
+  gap:20px; padding:24px 48px 32px; overflow:hidden;
+}
+
+.game-card {
+  position:relative; border:1px solid var(--border); border-radius:4px;
+  background:var(--surface); cursor:pointer; overflow:hidden;
+  transition:border-color 0.3s, transform 0.3s;
+  display:flex; flex-direction:column;
+  animation:cardIn 0.6s ease both;
+}
+.game-card:hover { transform:translateY(-3px); }
+
+@keyframes cardIn {
+  from { opacity:0; transform:translateY(20px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.game-card:nth-child(1) { animation-delay:0.1s; }
+.game-card:nth-child(2) { animation-delay:0.2s; }
+.game-card:nth-child(3) { animation-delay:0.3s; }
+.game-card:nth-child(4) { animation-delay:0.4s; }
+
+.game-card.chess { --card-accent: var(--accent-cyan); }
+.game-card.snake { --card-accent: var(--accent-green); }
+.game-card.tictactoe { --card-accent: var(--accent-magenta); }
+.game-card.checkers { --card-accent: var(--accent-gold); }
+
+.game-card:hover { border-color:var(--card-accent); box-shadow:0 0 30px rgba(from var(--card-accent) r g b / 0.2); }
+
+.card-bg {
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at 80% 20%, rgba(from var(--card-accent) r g b / 0.06), transparent 60%);
+  transition:opacity 0.3s;
+}
+.game-card:hover .card-bg { opacity:2; }
+
+.card-corner {
+  position:absolute; top:0; left:0;
+  width:40px; height:40px;
+  border-top:2px solid var(--card-accent);
+  border-left:2px solid var(--card-accent);
+  border-radius:4px 0 0 0;
+  opacity:0.6;
+}
+.card-corner-br {
+  position:absolute; bottom:0; right:0;
+  width:24px; height:24px;
+  border-bottom:1px solid var(--card-accent);
+  border-right:1px solid var(--card-accent);
+  opacity:0.3;
+}
+
+.card-icon { font-size:56px; padding:28px 28px 8px; line-height:1; position:relative; z-index:1; }
+.card-content { padding:4px 28px 20px; flex:1; position:relative; z-index:1; }
+.card-title {
+  font-family:'Orbitron',sans-serif; font-size:18px; font-weight:700; letter-spacing:3px;
+  color:var(--card-accent); text-transform:uppercase; margin-bottom:6px;
+}
+.card-desc { font-size:13px; color:var(--text-dim); line-height:1.6; }
+.card-tags { display:flex; gap:8px; margin-top:12px; }
+.tag {
+  font-size:9px; letter-spacing:2px; padding:3px 10px; border:1px solid var(--border);
+  color:var(--text-dim); text-transform:uppercase; border-radius:2px;
+}
+.tag.hot { border-color:var(--card-accent); color:var(--card-accent); }
+
+.card-cta {
+  position:absolute; bottom:20px; right:24px;
+  font-family:'Orbitron',sans-serif; font-size:10px; letter-spacing:3px;
+  color:var(--card-accent); text-transform:uppercase;
+  opacity:0; transform:translateX(10px);
+  transition:opacity 0.3s, transform 0.3s;
+}
+.game-card:hover .card-cta { opacity:1; transform:translateX(0); }
+
+/* ambient glow corners */
+.glow-tl { position:fixed; top:0; left:0; width:300px; height:300px; pointer-events:none;
+  background:radial-gradient(circle, rgba(0,245,255,0.04) 0%, transparent 70%); }
+.glow-br { position:fixed; bottom:0; right:0; width:300px; height:300px; pointer-events:none;
+  background:radial-gradient(circle, rgba(255,0,170,0.04) 0%, transparent 70%); }
+</style>
+</head>
+<body>
+<div class="glow-tl"></div>
+<div class="glow-br"></div>
+
+<div class="titlebar">
+  <div class="titlebar-title">⬡ Neural Arcade — Game Hub</div>
+  <div class="titlebar-controls">
+    <button class="ctrl-btn ctrl-close" onclick="window.close ? window.close() : null"></button>
+    <button class="ctrl-btn ctrl-min"></button>
+    <button class="ctrl-btn ctrl-max"></button>
+  </div>
+</div>
+
+<div class="app">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-main">NEURAL ARCADE</div>
+      <div class="logo-sub">AI-Powered Game Hub &nbsp;// v1.0</div>
+    </div>
+    <div class="header-stats">
+      <div class="stat">
+        <div class="stat-val" id="gamesPlayed">0</div>
+        <div class="stat-label">Games Played</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="totalWins">0</div>
+        <div class="stat-label">Total Wins</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">4</div>
+        <div class="stat-label">Games Available</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="game-grid">
+    <!-- Chess -->
+    <div class="game-card chess" onclick="launchGame('chess.html')">
+      <div class="card-bg"></div>
+      <div class="card-corner"></div>
+      <div class="card-corner-br"></div>
+      <div class="card-icon">♟</div>
+      <div class="card-content">
+        <div class="card-title">Neural Chess</div>
+        <div class="card-desc">Full chess engine with ML-inspired AI. Minimax + alpha-beta pruning with piece-square tables. Choose Easy, Medium, or Hard.</div>
+        <div class="card-tags">
+          <span class="tag hot">AI</span>
+          <span class="tag hot">3 Difficulty Levels</span>
+          <span class="tag">Minimax</span>
+        </div>
+      </div>
+      <div class="card-cta">Play Now →</div>
+    </div>
+
+    <!-- Snake -->
+    <div class="game-card snake" onclick="launchGame('snake.html')">
+      <div class="card-bg"></div>
+      <div class="card-corner"></div>
+      <div class="card-corner-br"></div>
+      <div class="card-icon">🐍</div>
+      <div class="card-content">
+        <div class="card-title">Neural Snake</div>
+        <div class="card-desc">Classic snake with neon aesthetics. Watch an AI play autonomously using a greedy pathfinding algorithm, or take control yourself.</div>
+        <div class="card-tags">
+          <span class="tag hot">AI Demo</span>
+          <span class="tag">Pathfinding</span>
+          <span class="tag">Classic</span>
+        </div>
+      </div>
+      <div class="card-cta">Play Now →</div>
+    </div>
+
+    <!-- Tic Tac Toe -->
+    <div class="game-card tictactoe" onclick="launchGame('tictactoe.html')">
+      <div class="card-bg"></div>
+      <div class="card-corner"></div>
+      <div class="card-corner-br"></div>
+      <div class="card-icon">⊞</div>
+      <div class="card-content">
+        <div class="card-title">Neural Tic-Tac-Toe</div>
+        <div class="card-desc">Unbeatable AI using perfect minimax. Can you draw against it? Features animated wins and full match history tracking.</div>
+        <div class="card-tags">
+          <span class="tag hot">Perfect AI</span>
+          <span class="tag">Minimax</span>
+          <span class="tag">Stats</span>
+        </div>
+      </div>
+      <div class="card-cta">Play Now →</div>
+    </div>
+
+    <!-- Checkers -->
+    <div class="game-card checkers" onclick="launchGame('checkers.html')">
+      <div class="card-bg"></div>
+      <div class="card-corner"></div>
+      <div class="card-corner-br"></div>
+      <div class="card-icon">⬤</div>
+      <div class="card-content">
+        <div class="card-title">Neural Checkers</div>
+        <div class="card-desc">Full 8×8 checkers with mandatory jumps, kinging, and multi-jump chains. AI uses minimax with position evaluation heuristics.</div>
+        <div class="card-tags">
+          <span class="tag hot">AI</span>
+          <span class="tag">Kinging</span>
+          <span class="tag">Multi-Jump</span>
+        </div>
+      </div>
+      <div class="card-cta">Play Now →</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Load stats
+const stats = JSON.parse(localStorage.getItem('neuralArcadeStats') || '{"played":0,"wins":0}');
+document.getElementById('gamesPlayed').textContent = stats.played;
+document.getElementById('totalWins').textContent = stats.wins;
+
+function launchGame(game) {
+  window.location.href = game;
+}
+</script>
+</body>
+</html>
