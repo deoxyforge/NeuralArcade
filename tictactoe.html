@@ -107,140 +107,227 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 </div>
 
 <script>
-let board,playerMark,aiMark,turn,gameOver,wins,losses,draws,matchNum;
-wins=parseInt(localStorage.getItem('ttt_wins')||0);
-losses=parseInt(localStorage.getItem('ttt_losses')||0);
-draws=parseInt(localStorage.getItem('ttt_draws')||0);
-matchNum=1;
-updateStats();
+const board = [null, null, null, null, null, null, null, null, null];
+let playerMark = 'X';
+let aiMark = 'O';
+let gameOver = false;
+let currentTurn = 'X';
+let wins = parseInt(localStorage.getItem('ttt_wins') || 0);
+let losses = parseInt(localStorage.getItem('ttt_losses') || 0);
+let draws = parseInt(localStorage.getItem('ttt_draws') || 0);
+let matchNum = 1;
 
-function setMarker(m){
-  playerMark=m;aiMark=m==='X'?'O':'X';
-  document.getElementById('mk-X').classList.toggle('active',m==='X');
-  document.getElementById('mk-O').classList.toggle('active',m==='O');
-  newGame();
-}
-playerMark='X';aiMark='O';
+const winCombos = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
-function newGame(){
-  board=Array(9).fill(null);gameOver=false;
-  for(let i=0;i<9;i++){
-    const c=document.getElementById('c'+i);
-    c.textContent='';c.className='cell';
+function hasWon(b, mark) {
+  for (let combo of winCombos) {
+    if (b[combo[0]] === mark && b[combo[1]] === mark && b[combo[2]] === mark) {
+      return combo;
+    }
   }
-  turn='X';
-  if(playerMark==='O'){
-    document.getElementById('statusMsg').textContent='AI THINKING...';
-    setTimeout(()=>{aiMove();render();},400);
-  } else {
-    document.getElementById('statusMsg').textContent='YOUR TURN';
-  }
+  return null;
 }
 
-const WINS=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-
-function checkWin(b,m){
-  return WINS.find(w=>w.every(i=>b[i]===m))||null;
-}
-
-function minimax(b,isMax){
-  const pw=checkWin(b,playerMark),aw=checkWin(b,aiMark);
-  if(aw) return 10;
-  if(pw) return -10;
-  if(b.every(c=>c)) return 0;
-  if(isMax){
-    let best=-Infinity;
-    for(let i=0;i<9;i++){
-      if(!b[i]){b[i]=aiMark;best=Math.max(best,minimax(b,false));b[i]=null;}
+function minimax(b, isAI) {
+  const playerWin = hasWon(b, playerMark);
+  const aiWin = hasWon(b, aiMark);
+  
+  if (aiWin) return 10;
+  if (playerWin) return -10;
+  if (b.every(c => c !== null)) return 0;
+  
+  if (isAI) {
+    let best = -Infinity;
+    for (let i = 0; i < 9; i++) {
+      if (b[i] === null) {
+        b[i] = aiMark;
+        best = Math.max(best, minimax(b, false));
+        b[i] = null;
+      }
     }
     return best;
   } else {
-    let best=Infinity;
-    for(let i=0;i<9;i++){
-      if(!b[i]){b[i]=playerMark;best=Math.min(best,minimax(b,true));b[i]=null;}
+    let best = Infinity;
+    for (let i = 0; i < 9; i++) {
+      if (b[i] === null) {
+        b[i] = playerMark;
+        best = Math.min(best, minimax(b, true));
+        b[i] = null;
+      }
     }
     return best;
   }
 }
 
-function aiMove(){
-  let best=-Infinity,move=0;
-  for(let i=0;i<9;i++){
-    if(!board[i]){board[i]=aiMark;const v=minimax(board,false);board[i]=null;if(v>best){best=v;move=i;}}
-  }
-  board[move]=aiMark;turn=playerMark;
-}
-
-function click(i){
-  if(gameOver||board[i]||turn!==playerMark) return;
-  board[i]=playerMark;turn=aiMark;
-  render();
-  if(gameOver) return;
-  document.getElementById('statusMsg').textContent='AI THINKING...';
-  setTimeout(()=>{
-    aiMove();
-    render();
-  },300);
-}
-
-function render(){
-  for(let i=0;i<9;i++){
-    const c=document.getElementById('c'+i);
-    if(board[i]){
-      c.textContent=board[i]==='X'?'✕':'○';
-      c.className='cell '+board[i]+' taken';
+function getAIMove() {
+  let bestScore = -Infinity;
+  let bestMove = 0;
+  
+  for (let i = 0; i < 9; i++) {
+    if (board[i] === null) {
+      board[i] = aiMark;
+      const score = minimax(board, false);
+      board[i] = null;
+      if (score > bestScore) {
+        bestScore = score;
+        bestMove = i;
+      }
     }
   }
-  const pw=checkWin(board,playerMark),aw=checkWin(board,aiMark);
-  if(aw){
-    aw.forEach(i=>document.getElementById('c'+i).classList.add('win-cell'));
-    document.getElementById('statusMsg').textContent='AI WINS!';
-    losses++;localStorage.setItem('ttt_losses',losses);
-    addHistory('L');gameOver=true;updateStats();return;
-  }
-  if(pw){
-    pw.forEach(i=>document.getElementById('c'+i).classList.add('win-cell'));
-    document.getElementById('statusMsg').textContent='YOU WIN! 🎉';
-    wins++;localStorage.setItem('ttt_wins',wins);
-    addHistory('W');gameOver=true;updateStats();
-    const s=JSON.parse(localStorage.getItem('neuralArcadeStats')||'{"played":0,"wins":0}');
-    s.wins++;localStorage.setItem('neuralArcadeStats',JSON.stringify(s));
+  
+  return bestMove;
+}
+
+function click(i) {
+  if (gameOver || board[i] !== null || currentTurn !== playerMark) {
     return;
   }
-  if(board.every(c=>c)){
-    document.getElementById('statusMsg').textContent="DRAW — WELL PLAYED";
-    draws++;localStorage.setItem('ttt_draws',draws);
-    addHistory('D');gameOver=true;updateStats();return;
+  
+  // Place player's mark
+  board[i] = playerMark;
+  const cell = document.getElementById('c' + i);
+  cell.textContent = playerMark === 'X' ? '✕' : '○';
+  cell.className = 'cell ' + playerMark + ' taken';
+  
+  // Check for player win
+  const playerWin = hasWon(board, playerMark);
+  if (playerWin) {
+    playerWin.forEach(idx => document.getElementById('c' + idx).classList.add('win-cell'));
+    document.getElementById('statusMsg').textContent = 'YOU WIN! 🎉';
+    wins++;
+    localStorage.setItem('ttt_wins', wins);
+    document.getElementById('wins').textContent = wins;
+    gameOver = true;
+    return;
   }
-  document.getElementById('statusMsg').textContent=turn===playerMark?'YOUR TURN':'AI THINKING...';
-  const s=JSON.parse(localStorage.getItem('neuralArcadeStats')||'{"played":0,"wins":0}');
-  s.played++;localStorage.setItem('neuralArcadeStats',JSON.stringify(s));
+  
+  // Check for draw
+  if (board.every(c => c !== null)) {
+    document.getElementById('statusMsg').textContent = 'DRAW — WELL PLAYED';
+    draws++;
+    localStorage.setItem('ttt_draws', draws);
+    document.getElementById('draws').textContent = draws;
+    gameOver = true;
+    return;
+  }
+  
+  // AI's turn
+  currentTurn = aiMark;
+  document.getElementById('statusMsg').textContent = 'AI THINKING...';
+  
+  setTimeout(() => {
+    const aiMove = getAIMove();
+    board[aiMove] = aiMark;
+    const aiCell = document.getElementById('c' + aiMove);
+    aiCell.textContent = aiMark === 'X' ? '✕' : '○';
+    aiCell.className = 'cell ' + aiMark + ' taken';
+    
+    // Check for AI win
+    const aiWin = hasWon(board, aiMark);
+    if (aiWin) {
+      aiWin.forEach(idx => document.getElementById('c' + idx).classList.add('win-cell'));
+      document.getElementById('statusMsg').textContent = 'AI WINS!';
+      losses++;
+      localStorage.setItem('ttt_losses', losses);
+      document.getElementById('losses').textContent = losses;
+      gameOver = true;
+      return;
+    }
+    
+    // Check for draw
+    if (board.every(c => c !== null)) {
+      document.getElementById('statusMsg').textContent = 'DRAW — WELL PLAYED';
+      draws++;
+      localStorage.setItem('ttt_draws', draws);
+      document.getElementById('draws').textContent = draws;
+      gameOver = true;
+      return;
+    }
+    
+    // Back to player's turn
+    currentTurn = playerMark;
+    document.getElementById('statusMsg').textContent = 'YOUR TURN';
+  }, 500);
 }
 
-function addHistory(result){
-  const hl=document.getElementById('histList');
-  const item=document.createElement('div');
-  item.className='hist-item '+result;
-  const labels={W:'WIN',L:'LOSS',D:'DRAW'};
-  item.textContent='#'+matchNum+' — '+labels[result];
-  matchNum++;
-  hl.insertBefore(item,hl.firstChild);
+function setMarker(m) {
+  playerMark = m;
+  aiMark = (m === 'X') ? 'O' : 'X';
+  document.getElementById('mk-X').classList.toggle('active', m === 'X');
+  document.getElementById('mk-O').classList.toggle('active', m === 'O');
+  newGame();
 }
 
-function updateStats(){
-  document.getElementById('wins').textContent=wins;
-  document.getElementById('losses').textContent=losses;
-  document.getElementById('draws').textContent=draws;
+function newGame() {
+  for (let i = 0; i < 9; i++) {
+    board[i] = null;
+    const cell = document.getElementById('c' + i);
+    if (cell) {
+      cell.textContent = '';
+      cell.className = 'cell';
+    }
+  }
+  currentTurn = playerMark === 'X' ? 'X' : 'X';
+  gameOver = false;
+  
+  if (playerMark === 'O') {
+    // AI goes first
+    document.getElementById('statusMsg').textContent = 'AI THINKING...';
+    setTimeout(() => {
+      const aiMove = getAIMove();
+      board[aiMove] = aiMark;
+      const cell = document.getElementById('c' + aiMove);
+      cell.textContent = aiMark === 'X' ? '✕' : '○';
+      cell.className = 'cell ' + aiMark + ' taken';
+      currentTurn = playerMark;
+      document.getElementById('statusMsg').textContent = 'YOUR TURN';
+    }, 500);
+  } else {
+    document.getElementById('statusMsg').textContent = 'YOUR TURN';
+  }
 }
 
-function resetStats(){
-  wins=0;losses=0;draws=0;matchNum=1;
-  localStorage.removeItem('ttt_wins');localStorage.removeItem('ttt_losses');localStorage.removeItem('ttt_draws');
-  document.getElementById('histList').innerHTML='';
-  updateStats();newGame();
+function resetStats() {
+  wins = 0;
+  losses = 0;
+  draws = 0;
+  localStorage.removeItem('ttt_wins');
+  localStorage.removeItem('ttt_losses');
+  localStorage.removeItem('ttt_draws');
+  document.getElementById('wins').textContent = 0;
+  document.getElementById('losses').textContent = 0;
+  document.getElementById('draws').textContent = 0;
+  newGame();
 }
 
-newGame();
+// Initialize
+document.getElementById('wins').textContent = wins;
+document.getElementById('losses').textContent = losses;
+document.getElementById('draws').textContent = draws;
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    newGame();
+    for (let i = 0; i < 9; i++) {
+      const cell = document.getElementById('c' + i);
+      if (cell) {
+        cell.addEventListener('click', function() {
+          click(i);
+        });
+      }
+    }
+  });
+} else {
+  newGame();
+  for (let i = 0; i < 9; i++) {
+    const cell = document.getElementById('c' + i);
+    if (cell) {
+      cell.addEventListener('click', function() {
+        click(i);
+      });
+    }
+  }
+}
 </script>
 </body>
 </html>
