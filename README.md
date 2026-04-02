@@ -143,3 +143,4 @@ MIT License — free to use and modify.
 
 - Chess piece unicode symbols
 - [Orbitron](https://fonts.google.com/specimen/Orbitron) & [Rajdhani](https://fonts.google.com/specimen/Rajdhani) fonts via Google Fonts
+- Chess inspired by https://github.com/Jashanjindal
