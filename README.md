@@ -49,7 +49,8 @@ A cyberpunk AI-powered game hub with **Chess**, **Snake**, **Tic-Tac-Toe**, and 
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/NeuralArcade.git
+git clone
+https://github.com/deoxyforge/NeuralArcade?tab=readme-ov-file
 cd NeuralArcade
 
 # Install dependencies
