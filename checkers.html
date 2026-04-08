@@ -39,8 +39,8 @@ document.addEventListener('keydown', function(e) {
 :root{--bg:#080810;--surface:#0e0e1a;--panel:#13131f;--border:#1e1e35;--cyan:#00f5ff;--gold:#ffd700;--mag:#ff00aa;--text:#e0e0ff;--dim:#6060a0;}
 *{margin:0;padding:0;box-sizing:border-box;}html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;overflow:hidden;}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);}
-.topbar{height:44px;background:rgba(8,8,16,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;}
-.back-btn{font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:2px;color:var(--gold);border:1px solid var(--gold);padding:5px 14px;cursor:pointer;background:transparent;text-transform:uppercase;transition:all .2s;}
+.topbar{height:44px;background:rgba(8,8,16,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;-webkit-app-region:no-drag;}
+.back-btn{font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:2px;color:var(--gold);border:1px solid var(--gold);padding:5px 14px;cursor:pointer;background:transparent;text-transform:uppercase;transition:all .2s;text-decoration:none;display:inline-block;-webkit-app-region:no-drag;}
 .back-btn:hover{background:var(--gold);color:var(--bg);}
 .topbar-title{font-family:'Orbitron',sans-serif;font-size:13px;letter-spacing:4px;color:var(--gold);}
 .app{height:calc(100vh - 44px);display:flex;}
@@ -67,12 +67,15 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 /* Board */
 .board-area{flex:1;display:flex;align-items:center;justify-content:center;}
 #board{display:grid;grid-template-columns:repeat(8,72px);grid-template-rows:repeat(8,72px);border:2px solid var(--border);box-shadow:0 0 50px rgba(255,215,0,.07);user-select:none;}
-.sq{width:72px;height:72px;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;}
-.sq.dark{background:#1a0f05;}.sq.light{background:#0d0d1a;}
+.sq{width:72px;height:72px;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;transition:background .14s,filter .14s;}
+.sq.dark{background:#4a2e1f;}.sq.light{background:#e2cfae;}
+.sq:hover{filter:brightness(1.05);}
 .sq.sel{background:rgba(255,215,0,.22)!important;outline:2px solid var(--gold);outline-offset:-2px;}
 .sq.movable{background:rgba(255,215,0,.1)!important;}
 .sq.movable::after{content:'';width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,215,0,.65);position:absolute;pointer-events:none;}
 .sq.drag-over{background:rgba(0,245,255,.22)!important;outline:2px solid var(--cyan);outline-offset:-2px;}
+.sq.last-from{background:rgba(0,245,255,.13)!important;outline:1px solid rgba(0,245,255,.32);outline-offset:-1px;}
+.sq.last-to{background:rgba(255,215,0,.2)!important;outline:2px solid rgba(255,215,0,.55);outline-offset:-2px;}
 
 /* Piece element */
 .piece-el{
@@ -82,11 +85,15 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   box-shadow:0 3px 10px rgba(0,0,0,.6),inset 0 2px 4px rgba(255,255,255,.25);
   transition:filter .15s,transform .12s;
 }
-.piece-el.red-p{background:radial-gradient(circle at 35% 30%,#ff9090,#cc1111);}
-.piece-el.blk-p{background:radial-gradient(circle at 35% 30%,#aaaaaa,#333);}
+.piece-el.red-p{background:radial-gradient(circle at 35% 30%,#ffb4a8,#d4281f);}
+.piece-el.blk-p{background:radial-gradient(circle at 35% 30%,#d0d0d0,#2a2a2a);}
 .piece-el:hover{filter:brightness(1.2);transform:scale(1.06);}
 .piece-el.selected-p{box-shadow:0 0 0 3px var(--gold),0 3px 10px rgba(0,0,0,.6);}
 .king-crown{font-size:22px;line-height:1;filter:drop-shadow(0 0 4px gold);}
+
+/* Non-blocking AI move animation */
+.ai-fly{position:fixed;z-index:12000;pointer-events:none;transition:transform .28s cubic-bezier(.22,.61,.36,1),opacity .2s;}
+.piece-el.moving-out{opacity:.18;}
 
 /* Ghost piece */
 #drag-ghost{
@@ -111,7 +118,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 </head>
 <body>
 <div class="topbar">
-  <button class="back-btn" onclick="window.goHome()">← Hub</button>
+  <a class="back-btn" id="hubBtn" href="index.html" role="button">← Hub</a>
   <div class="topbar-title">⬤ NEURAL CHECKERS</div>
 </div>
 
@@ -181,7 +188,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 
 <script>
 /* ═══════════════ CHECKERS ENGINE ═══════════════ */
-let board,selected,legalMoves,turn,gameOver;
+let board,selected,legalMoves,turn,gameOver,lastFrom,lastTo;
+const AI_MOVE_DELAY_MS = 700; // UX: readable AI pacing (configurable 500-1000ms window)
 
 const IDX=(r,c)=>r*8+c, ROW=i=>Math.floor(i/8), COL=i=>i%8;
 const isRed=p=>p==='r'||p==='R', isBlk=p=>p==='b'||p==='B', isKing=p=>p==='R'||p==='B';
@@ -260,18 +268,54 @@ function bestAIMove(){
 /* ── Execute move ── */
 function doMove(m){
   board=applyMove(m,board);
+  lastFrom=m.from;lastTo=m.to;
   logMove(m);
+}
+
+function animateAIMove(move,done){
+  // Keep board state stable until travel finishes to avoid UI/state desync
+  const fromSq=document.getElementById('sq'+move.from),toSq=document.getElementById('sq'+move.to);
+  const fromPiece=fromSq?.querySelector('.piece-el');
+  if(!fromSq||!toSq||!fromPiece){done();return;}
+
+  const fromRect=fromPiece.getBoundingClientRect(),toRect=toSq.getBoundingClientRect();
+  const fly=fromPiece.cloneNode(true);
+  fly.classList.add('ai-fly');
+  fly.style.left=fromRect.left+'px';
+  fly.style.top=fromRect.top+'px';
+  fly.style.width=fromRect.width+'px';
+  fly.style.height=fromRect.height+'px';
+  fromPiece.classList.add('moving-out');
+  document.body.appendChild(fly);
+
+  requestAnimationFrame(()=>{
+    const dx=(toRect.left+10)-fromRect.left,dy=(toRect.top+10)-fromRect.top;
+    fly.style.transform=`translate(${dx}px, ${dy}px) scale(1.04)`;
+  });
+
+  setTimeout(()=>{
+    fly.remove();
+    done();
+  },300);
 }
 
 function triggerAI(){
   document.getElementById('aiThink').classList.add('show');
   setTimeout(()=>{
     const m=bestAIMove();
-    if(m)doMove(m);
-    turn='r';document.getElementById('aiThink').classList.remove('show');
-    selected=null;legalMoves=[];
-    renderBoard();updateUI();checkGO();
-  },250);
+    if(!m){
+      turn='r';document.getElementById('aiThink').classList.remove('show');
+      selected=null;legalMoves=[];
+      renderBoard();updateUI();checkGO();
+      return;
+    }
+    animateAIMove(m,()=>{
+      doMove(m);
+      turn='r';document.getElementById('aiThink').classList.remove('show');
+      selected=null;legalMoves=[];
+      renderBoard();updateUI();checkGO();
+    });
+  },AI_MOVE_DELAY_MS);
 }
 
 function execPlayerMove(move){
@@ -367,6 +411,8 @@ function renderBoard(){
       sq.className='sq '+((r+c)%2===0?'light':'dark');
       if(i===selected)sq.classList.add('sel');
       if(movableSet.has(i))sq.classList.add('movable');
+      if(i===lastFrom)sq.classList.add('last-from');
+      if(i===lastTo)sq.classList.add('last-to');
 
       sq.addEventListener('mousedown',e=>{
         if(board[i]&&isRed(board[i])&&turn==='r'&&dragFrom<0){startDrag(e,i);}
@@ -426,7 +472,7 @@ function newGame(){
   board=Array(64).fill(0);
   for(let r=0;r<3;r++)for(let c=0;c<8;c++)if((r+c)%2===1)board[IDX(r,c)]='b';
   for(let r=5;r<8;r++)for(let c=0;c<8;c++)if((r+c)%2===1)board[IDX(r,c)]='r';
-  selected=null;legalMoves=[];turn='r';gameOver=false;dragFrom=-1;
+  selected=null;legalMoves=[];turn='r';gameOver=false;dragFrom=-1;lastFrom=-1;lastTo=-1;
   document.getElementById('moveLog').innerHTML='';
   document.getElementById('goOverlay').classList.remove('show');
   renderBoard();updateUI();
@@ -446,6 +492,34 @@ if (typeof goHome === 'undefined') {
 }
 
 newGame();
+
+// Navigation reliability: consolidate all home-routing paths to one robust function.
+function reliableGoHome(){
+  try{
+    if(typeof window.navigateTo==='function'){
+      window.navigateTo('index.html');
+      return;
+    }
+  }catch(e){}
+  try{
+    const { ipcRenderer } = require('electron');
+    ipcRenderer.send('navigate-to','index.html');
+    if(typeof ipcRenderer.invoke==='function'){
+      ipcRenderer.invoke('navigate-to','index.html').catch(()=>{});
+    }
+    return;
+  }catch(e){}
+  window.location.href='index.html';
+}
+window.goHome = reliableGoHome;
+
+const hubBtn=document.getElementById('hubBtn');
+if(hubBtn){
+  hubBtn.addEventListener('click',function(e){
+    e.stopPropagation();
+    reliableGoHome();
+  });
+}
 </script>
 </body>
 </html>
