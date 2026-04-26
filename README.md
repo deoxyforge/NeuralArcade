@@ -113,11 +113,16 @@ NeuralArcade/
 ## 📸 Screenshot
 
 > The hub features a dark cyberpunk aesthetic with glowing accents, scanline overlays, and animated card reveals.
-<img width="1606" height="1035" alt="image" src="https://github.com/user-attachments/assets/78c4ba33-357b-4fca-a498-02b2710c8d9c" />
-<img width="1601" height="1020" alt="image" src="https://github.com/user-attachments/assets/f2856b71-5e4b-4ab6-9b6f-07b655091a89" />
-<img width="1606" height="1023" alt="image" src="https://github.com/user-attachments/assets/c8a514c3-5544-4b14-be29-1386adde400c" />
-<img width="1606" height="1028" alt="image" src="https://github.com/user-attachments/assets/3302efaa-3020-475b-a4af-b67d8dd92e7f" />
-<img width="1607" height="1024" alt="image" src="https://github.com/user-attachments/assets/5e668de8-2070-4d4c-b646-4c5e2447b4d9" />
+<img width="1920" height="1080" alt="Screenshot 2026-04-26 233722" src="https://github.com/user-attachments/assets/bde69eac-b0ee-446d-9460-ebef924b5459" />
+<img width="1919" height="1027" alt="Screenshot 2026-04-26 233932" src="https://github.com/user-attachments/assets/3351b8b4-9054-4910-98f2-52542db47e2b" />
+
+<img width="1911" height="1028" alt="Screenshot 2026-04-26 233944" src="https://github.com/user-attachments/assets/c7fcd1f0-4bbc-4b8a-810f-d3fdbfc1f6b4" />
+<img width="1919" height="1024" alt="Screenshot 2026-04-26 233859" src="https://github.com/user-attachments/assets/629ca08e-9349-4818-9f8b-6d6c1c677bc0" />
+
+<img width="1919" height="1028" alt="Screenshot 2026-04-26 233831" src="https://github.com/user-attachments/assets/1b0e05c6-c98f-4d71-879c-c35e3a796cdd" />
+
+
+
 
 
 
